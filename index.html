@@ -827,17 +827,17 @@ function startCountdown() {
 }
 
 function bukaForm() {
-  let formUrl = FORM;
   const stored = JSON.parse(localStorage.getItem('ab_session') || '{}');
+  const durasi = stored.durasi || fmtTime(elapsedSec) || '00:00';
 
-  // Entry ID kolom "Durasi Pengerjaan" per grup
+  // URL panjang Google Form (short URL forms.gle tidak support prefill)
+  const FORM_FULL_A = 'https://docs.google.com/forms/d/e/1FAIpQLSdVKzi5BXo3JBCY0xh0biMJURVcX_CrDEBvwuZcgc5a4GIy2w/viewform';
+  const FORM_FULL_B = 'https://docs.google.com/forms/d/e/1FAIpQLSfi-0aDPyGK2_kmxNGB2rZuuq1SVPKAnxWqMp7eaTggw_JlyA/viewform';
+
+  const formBase    = GRUP === 'B' ? FORM_FULL_B : FORM_FULL_A;
   const entryDurasi = GRUP === 'B' ? 'entry.271850817' : 'entry.808127997';
 
-  // Prefill durasi otomatis ke Google Form
-  const durasi = stored.durasi || fmtTime(elapsedSec) || '00:00';
-  const separator = formUrl.includes('?') ? '&' : '?';
-  formUrl = formUrl + separator + entryDurasi + '=' + encodeURIComponent(durasi);
-
+  const formUrl = formBase + '?usp=pp_url&' + entryDurasi + '=' + encodeURIComponent(durasi);
   window.location.href = formUrl;
 }
 
