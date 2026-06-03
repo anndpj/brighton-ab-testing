@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brighton — Sesi Pengujian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f2eb;
+    --surface: #ffffff;
+    --surface2: #f0ede5;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1a1814;
+    --muted: #7a7670;
+    --accent: #1a1814;
+    --green: #2d6a4f;
+    --green-light: #d8f3dc;
+    --red: #c1121f;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Syne', sans-serif;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── HEADER ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(245,242,235,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .grup-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    background: var(--surface);
+  }
+
+  /* ── SCREEN 1: BRIEFING ── */
+  #screen-briefing {
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+  }
+
+  .briefing-wrap {
+    max-width: 620px;
+    width: 100%;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-indicator {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-indicator::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--muted);
+  }
+
+  .briefing-title {
+    font-family: var(--display);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+  }
+  .briefing-title em {
+    font-style: normal;
+    color: var(--muted);
+  }
+
+  .briefing-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  /* Name input */
+  .name-field {
+    margin-bottom: 24px;
+  }
+  .name-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .name-field input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-field input:focus {
+    border-color: var(--text);
+  }
+
+  /* Task box */
+  .task-box {
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .task-box::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--text);
+  }
+  .task-box-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .task-box-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  /* Btn */
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 28px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary:hover {
+    background: #2d2a22;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary .arrow {
+    transition: transform 0.2s;
+  }
+  .btn-primary:hover .arrow { transform: translateX(4px); }
+
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 28px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+  }
+  .btn-secondary:hover {
+    background: #1b4332;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(45,106,79,0.3);
+  }
+
+  /* Note */
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── SCREEN 2: TASK ACTIVE ── */
+  #screen-task {
+    flex-direction: column;
+  }
+
+  .task-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 32px;
+  }
+
+  /* Timer */
+  .timer-wrap {
+    text-align: center;
+    animation: fadeUp 0.5s ease both;
+  }
+  .timer-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .timer-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: blink 1s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .timer-display {
+    font-family: var(--display);
+    font-size: clamp(64px, 12vw, 96px);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Task reminder */
+  .task-reminder {
+    max-width: 520px;
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+  .task-reminder-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .task-reminder-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* Figma CTA */
+  .figma-cta {
+    max-width: 520px;
+    width: 100%;
+    animation: fadeUp 0.5s 0.2s ease both;
+  }
+  .figma-cta-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .btn-figma {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 24px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border2);
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .btn-figma:hover {
+    background: var(--surface);
+    border-color: var(--text);
+  }
+  .figma-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .done-section {
+    max-width: 520px;
+    width: 100%;
+    animation: fadeUp 0.5s 0.3s ease both;
+  }
+  .done-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .done-divider::before, .done-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border2);
+  }
+
+  /* ── SCREEN 3: SELESAI ── */
+  #screen-done {
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+  }
+  .done-wrap {
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    animation: fadeUp 0.6s ease both;
+  }
+  .done-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 24px;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .done-title {
+    font-family: var(--display);
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+  .done-name {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  /* Stats */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    justify-content: center;
+  }
+  .stat-card {
+    flex: 1;
+    max-width: 160px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .done-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 28px;
+  }
+
+  /* Countdown */
+  .countdown-bar-wrap {
+    margin-bottom: 16px;
+  }
+  .countdown-text {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+  }
+  .countdown-bar {
+    height: 3px;
+    background: var(--border2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .countdown-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 2px;
+    transition: width 1s linear;
+  }
+
+  /* Floating timer widget */
+  #floating-timer {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: 50px;
+    padding: 10px 18px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    z-index: 100;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    animation: slideUp 0.4s cubic-bezier(0.34,1.2,0.64,1) both;
+    letter-spacing: 0.03em;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #floating-timer .ft-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    animation: blink 1s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    .top-bar { padding: 16px 20px; }
+    #screen-briefing, #screen-done { padding: 40px 16px; }
+    .stats-row { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     SCREEN 1 — BRIEFING
+══════════════════════════════ -->
+<div class="screen active" id="screen-briefing">
+  <div class="top-bar">
+    <div class="logo">Brighton <span>Research</span></div>
+    <div class="grup-badge" id="badge-grup">Memuat...</div>
+  </div>
+
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:60px 24px">
+    <div class="briefing-wrap">
+      <div class="step-indicator">Sesi Pengujian Antarmuka</div>
+      <h1 class="briefing-title">
+        Selamat datang<br><em>di sesi pengujian.</em>
+      </h1>
+      <p class="briefing-desc">
+        Kamu akan mencoba menggunakan website properti Brighton dan menyelesaikan satu tugas sederhana. Tidak ada jawaban benar atau salah — yang kita ukur adalah pengalaman kamu.
+      </p>
+
+      <div class="name-field">
+        <label>Nama lengkap kamu</label>
+        <input type="text" id="input-nama" placeholder="Tulis nama kamu di sini..." autocomplete="off">
+      </div>
+
+      <div class="task-box">
+        <div class="task-box-label">📋 Skenario Tugas</div>
+        <div class="task-box-text" id="task-text">Memuat skenario...</div>
+      </div>
+
+      <button class="btn-primary" onclick="mulaiTugas()">
+        Mulai Tugas
+        <span class="arrow">→</span>
+      </button>
+      <p class="note">Timer akan mulai berjalan saat kamu klik tombol di atas.<br>Kamu akan diarahkan ke prototype website Brighton.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN 2 — TASK ACTIVE
+══════════════════════════════ -->
+<div class="screen" id="screen-task">
+  <div class="top-bar">
+    <div class="logo">Brighton <span>Research</span></div>
+    <div class="grup-badge" id="badge-grup-2">—</div>
+  </div>
+
+  <div class="task-content">
+    <!-- Timer besar -->
+    <div class="timer-wrap">
+      <div class="timer-label">
+        <div class="timer-dot"></div>
+        Waktu berjalan
+      </div>
+      <div class="timer-display" id="timer-display">00:00</div>
+    </div>
+
+    <!-- Task reminder -->
+    <div class="task-reminder">
+      <div class="task-reminder-label">📋 Tugasmu</div>
+      <div class="task-reminder-text" id="task-reminder-text">—</div>
+    </div>
+
+    <!-- Buka prototype -->
+    <div class="figma-cta">
+      <div class="figma-cta-label">Belum membuka website? Klik di bawah untuk membuka prototype →</div>
+      <a class="btn-figma" id="link-figma" href="#" target="_blank">
+        <svg class="figma-icon" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 28.5C19 25.9804 20.0009 23.5641 21.7825 21.7825C23.5641 20.0009 25.9804 19 28.5 19C31.0196 19 33.4359 20.0009 35.2175 21.7825C36.9991 23.5641 38 25.9804 38 28.5C38 31.0196 36.9991 33.4359 35.2175 35.2175C33.4359 36.9991 31.0196 38 28.5 38C25.9804 38 23.5641 36.9991 21.7825 35.2175C20.0009 33.4359 19 31.0196 19 28.5Z" fill="#1ABCFE"/>
+          <path d="M0 47.5C0 44.9804 1.00089 42.5641 2.78249 40.7825C4.56408 39.0009 6.98044 38 9.5 38H19V47.5C19 50.0196 17.9991 52.4359 16.2175 54.2175C14.4359 55.9991 12.0196 57 9.5 57C6.98044 57 4.56408 55.9991 2.78249 54.2175C1.00089 52.4359 0 50.0196 0 47.5Z" fill="#0ACF83"/>
+          <path d="M19 0V19H28.5C31.0196 19 33.4359 17.9991 35.2175 16.2175C36.9991 14.4359 38 12.0196 38 9.5C38 6.98044 36.9991 4.56408 35.2175 2.78249C33.4359 1.00089 31.0196 0 28.5 0H19Z" fill="#FF7262"/>
+          <path d="M0 9.5C0 12.0196 1.00089 14.4359 2.78249 16.2175C4.56408 17.9991 6.98044 19 9.5 19H19V0H9.5C6.98044 0 4.56408 1.00089 2.78249 2.78249C1.00089 4.56408 0 6.98044 0 9.5Z" fill="#F24E1E"/>
+          <path d="M0 28.5C0 31.0196 1.00089 33.4359 2.78249 35.2175C4.56408 36.9991 6.98044 38 9.5 38H19V19H9.5C6.98044 19 4.56408 20.0009 2.78249 21.7825C1.00089 23.5641 0 25.9804 0 28.5Z" fill="#A259FF"/>
+        </svg>
+        Buka Prototype Brighton
+      </a>
+    </div>
+
+    <!-- Tombol selesai -->
+    <div class="done-section">
+      <div class="done-divider">Sudah selesai?</div>
+      <button class="btn-secondary" onclick="selesaiTugas()">
+        ✓ Tugas Selesai — Stop Timer
+      </button>
+      <p class="note" style="margin-top:12px">Klik tombol ini setelah kamu berhasil membuka halaman detail properti.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     SCREEN 3 — SELESAI
+══════════════════════════════ -->
+<div class="screen" id="screen-done">
+  <div class="top-bar">
+    <div class="logo">Brighton <span>Research</span></div>
+    <div class="grup-badge" id="badge-grup-3">—</div>
+  </div>
+
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:60px 24px">
+    <div class="done-wrap">
+      <div class="done-icon">✓</div>
+      <h2 class="done-title">Tugas selesai!</h2>
+      <p class="done-name" id="done-name">Terima kasih sudah berpartisipasi.</p>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-durasi">—</div>
+          <div class="stat-label">Durasi</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-grup">—</div>
+          <div class="stat-label">Grup</div>
+        </div>
+      </div>
+
+      <p class="done-desc">
+        Satu langkah lagi — mohon isi kuesioner singkat berikut.<br>
+        Hanya <strong>10 pertanyaan</strong>, kurang lebih <strong>3 menit</strong>.
+      </p>
+
+      <div class="countdown-bar-wrap">
+        <div class="countdown-text" id="countdown-text">Mengarahkan ke kuesioner dalam 5 detik...</div>
+        <div class="countdown-bar">
+          <div class="countdown-fill" id="countdown-fill" style="width:100%"></div>
+        </div>
+      </div>
+
+      <button class="btn-secondary" id="btn-goto-form" onclick="bukaForm()">
+        📋 Buka Kuesioner SUS Sekarang
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating timer (muncul saat tab kembali dari Figma) -->
+<div id="floating-timer">
+  <div class="ft-dot"></div>
+  <span id="ft-time">00:00</span>
+</div>
+
+<script>
+// ── CONFIG ── diisi dari URL params
+const params = new URLSearchParams(location.search);
+const GRUP    = (params.get('grup') || 'A').toUpperCase();
+const FIGMA   = params.get('figma') || '#';
+const FORM_A  = params.get('forma') || '#';
+const FORM_B  = params.get('formb') || '#';
+const FORM    = GRUP === 'B' ? FORM_B : FORM_A;
+const SKENARIO = params.get('skenario') ||
+  'Anda sedang mencari rumah untuk dibeli di Yogyakarta dengan harga maksimal Rp 500 juta dan minimal 2 kamar tidur. Gunakan website ini untuk menemukan properti yang sesuai, lalu buka halaman detail salah satu properti tersebut.';
+
+// State
+let startTime  = null;
+let timerInterval = null;
+let elapsedSec = 0;
+let nama       = '';
+
+// ── INIT ──
+document.getElementById('badge-grup').textContent  = 'Grup ' + GRUP;
+document.getElementById('badge-grup-2').textContent = 'Grup ' + GRUP;
+document.getElementById('badge-grup-3').textContent = 'Grup ' + GRUP;
+document.getElementById('task-text').textContent        = SKENARIO;
+document.getElementById('task-reminder-text').textContent = SKENARIO;
+document.getElementById('link-figma').href = FIGMA;
+document.getElementById('stat-grup').textContent = GRUP;
+
+// ── HELPERS ──
+function fmtTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return m + ':' + s;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+    const t = fmtTime(elapsedSec);
+    document.getElementById('timer-display').textContent = t;
+    document.getElementById('ft-time').textContent = t;
+  }, 500);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+// ── ACTIONS ──
+function mulaiTugas() {
+  nama = document.getElementById('input-nama').value.trim();
+  if (!nama) {
+    document.getElementById('input-nama').focus();
+    document.getElementById('input-nama').style.borderColor = '#c1121f';
+    setTimeout(() => document.getElementById('input-nama').style.borderColor = '', 2000);
+    return;
+  }
+
+  // Simpan ke localStorage
+  const data = {
+    nama,
+    grup: GRUP,
+    mulai: new Date().toISOString(),
+    mulaiMs: Date.now()
+  };
+  localStorage.setItem('ab_session', JSON.stringify(data));
+
+  // Pindah screen
+  showScreen('screen-task');
+
+  // Buka Figma di tab baru
+  if (FIGMA && FIGMA !== '#') {
+    setTimeout(() => window.open(FIGMA, '_blank'), 500);
+  }
+
+  // Mulai timer
+  startTimer();
+
+  // Tampilkan floating timer saat halaman tidak fokus
+  document.addEventListener('visibilitychange', () => {
+    const ft = document.getElementById('floating-timer');
+    if (document.hidden) {
+      ft.style.display = 'flex';
+    } else {
+      ft.style.display = 'none';
+    }
+  });
+}
+
+function selesaiTugas() {
+  stopTimer();
+
+  const durasi = fmtTime(elapsedSec);
+  const durasiMs = elapsedSec * 1000;
+
+  // Update stored data
+  const stored = JSON.parse(localStorage.getItem('ab_session') || '{}');
+  stored.selesai    = new Date().toISOString();
+  stored.durasiSec  = elapsedSec;
+  stored.durasi     = durasi;
+  localStorage.setItem('ab_session', JSON.stringify(stored));
+
+  // Tampilkan screen selesai
+  document.getElementById('done-name').textContent =
+    nama ? `Terima kasih, ${nama}!` : 'Terima kasih sudah berpartisipasi.';
+  document.getElementById('stat-durasi').textContent = durasi;
+  document.getElementById('floating-timer').style.display = 'none';
+
+  showScreen('screen-done');
+  startCountdown();
+}
+
+function startCountdown() {
+  let sisa = 5;
+  const fill = document.getElementById('countdown-fill');
+  const txt  = document.getElementById('countdown-text');
+
+  const interval = setInterval(() => {
+    sisa--;
+    fill.style.width = (sisa / 5 * 100) + '%';
+    if (sisa <= 0) {
+      clearInterval(interval);
+      bukaForm();
+    } else {
+      txt.textContent = `Mengarahkan ke kuesioner dalam ${sisa} detik...`;
+    }
+  }, 1000);
+}
+
+function bukaForm() {
+  // Tambahkan data ke URL form sebagai prefill jika mendukung
+  let formUrl = FORM;
+
+  // Jika Google Form, bisa prefill nama via URL
+  // Format: ?entry.XXXXX=nilai (ganti dengan entry ID form kamu)
+  const stored = JSON.parse(localStorage.getItem('ab_session') || '{}');
+
+  // Redirect ke form
+  window.location.href = formUrl;
+}
+
+// ── Restore session jika ada (page refresh) ──
+(function restoreSession() {
+  const stored = JSON.parse(localStorage.getItem('ab_session') || 'null');
+  if (stored && stored.mulaiMs && !stored.selesai) {
+    // Sesi sedang berjalan
+    nama = stored.nama || '';
+    showScreen('screen-task');
+    startTime = stored.mulaiMs;
+    startTimer();
+  }
+})();
+</script>
+</body>
+</html>
