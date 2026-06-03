@@ -827,14 +827,17 @@ function startCountdown() {
 }
 
 function bukaForm() {
-  // Tambahkan data ke URL form sebagai prefill jika mendukung
   let formUrl = FORM;
-
-  // Jika Google Form, bisa prefill nama via URL
-  // Format: ?entry.XXXXX=nilai (ganti dengan entry ID form kamu)
   const stored = JSON.parse(localStorage.getItem('ab_session') || '{}');
 
-  // Redirect ke form
+  // Entry ID kolom "Durasi Pengerjaan" per grup
+  const entryDurasi = GRUP === 'B' ? 'entry.271850817' : 'entry.808127997';
+
+  // Prefill durasi otomatis ke Google Form
+  const durasi = stored.durasi || fmtTime(elapsedSec) || '00:00';
+  const separator = formUrl.includes('?') ? '&' : '?';
+  formUrl = formUrl + separator + entryDurasi + '=' + encodeURIComponent(durasi);
+
   window.location.href = formUrl;
 }
 
